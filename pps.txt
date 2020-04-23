@@ -1,0 +1,24 @@
+	CONFIG2.PPS1WAY=0;
+	ANSELB=0;
+	ANSELC=0;
+	
+	--------------------------
+	
+	GIE = 0;
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCK = 0x00; // unlock PPS
+
+	TRISB2 = 1;
+    RX2DTPPS = 0x0A;   //RB2->EUSART2:RX2;    in //table 15-2 стр 196	число для каждого порта разное
+	
+	TRISB1 = 0;
+	RB1PPS = 0x11;   //RB1->EUSART2:TX2;   out	//table 15-3 стр 198	0x11 - для всех
+	
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCK = 0x01; // lock   PPS
+    GIE = state;
+	
+	========================
+	
