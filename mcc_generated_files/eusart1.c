@@ -48,6 +48,7 @@
   Section: Included Files
 */
 #include "eusart1.h"
+#include "../myroutines.h"
 
 /**
   Section: Macro Declarations
@@ -202,6 +203,9 @@ void EUSART1_RxDataHandler(void){
         eusart1RxHead = 0;
     }
     eusart1RxCount++;
+    
+    //My
+    Usart1GetBlock();
 }
 
 void EUSART1_DefaultFramingErrorHandler(void){}
