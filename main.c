@@ -30,18 +30,21 @@ stInterrupt IntrChanged;
 
 uint16_t sId[8];
 uint16_t iSerNum;
-uint8_t arRecivBuff1[20]; // __at(0x100);
+uint8_t iCurrTerm;
+uint8_t arRecivBuff1[20]; // __at(0x100); // >= 16 + 4
 uint8_t arRecivBuff2[20]; // __at(0x120);
-uint8_t arSendBuff1[30];
+uint8_t arSendBuff1[30]; //>=AnsStatus + 4
 uint8_t arSendBuff2[30];
+AnsStatus arStat[5];
 
 /** D E C L A R A T I O N S **************************************************/
 void My_Initialise()
 {
+    iCurrTerm = 0;
     memset(arRecivBuff1, 0, sizeof (arRecivBuff1));
     memset(arRecivBuff2, 0, sizeof (arRecivBuff2));
+    memset(arStat, 0, sizeof (arStat));
 
-    IntrChanged.bIntrPin = false;
     IntrChanged.bIntrUsart1 = false;
     IntrChanged.bIntrUsart2 = false;
 
@@ -62,12 +65,35 @@ void SendMessage1(UsartAnswer ans, void* data, uint8_t lendata)
 
     for (i = 0; i < lenmess; i++)
     {
-        if (EUSART1_is_tx_ready())
-        {
-            EUSART1_Write(arSendBuff1[i]);
-            while (!EUSART1_is_tx_done()) NOP();
-        }
+        while (!EUSART2_is_tx_ready()) NOP();
+        EUSART1_Write(arSendBuff1[i]);
+        while (!EUSART1_is_tx_done()) NOP();
     }
+}
+
+void SendCurrArStatus1(void)
+{
+    uint8_t i = 0;
+    uint8_t crc = 0;
+    crc = GetCRC8((uint8_t *) arStat, sizeof (arStat)) + ANS_ARSTAT;
+    while (!EUSART2_is_tx_ready()) NOP();
+    EUSART1_Write(0x0A);
+    while (!EUSART1_is_tx_done()) NOP();
+    while (!EUSART2_is_tx_ready()) NOP();
+    EUSART1_Write(sizeof (arStat) + 4);
+    while (!EUSART1_is_tx_done()) NOP();
+    while (!EUSART2_is_tx_ready()) NOP();
+    EUSART1_Write(ANS_ARSTAT);
+    while (!EUSART1_is_tx_done()) NOP();
+    for (i = 0; i < sizeof (arStat); i++)
+    {
+        while (!EUSART2_is_tx_ready()) NOP();
+        EUSART1_Write(*((uint8_t *) arStat + i));
+        while (!EUSART1_is_tx_done()) NOP();
+    }
+    while (!EUSART2_is_tx_ready()) NOP();
+    EUSART1_Write(crc);
+    while (!EUSART1_is_tx_done()) NOP();
 }
 
 void SendMessage2(UsartAnswer ans, void* data, uint8_t lendata)
@@ -84,11 +110,9 @@ void SendMessage2(UsartAnswer ans, void* data, uint8_t lendata)
 
     for (i = 0; i < lenmess; i++)
     {
-        if (EUSART2_is_tx_ready())
-        {
-            EUSART2_Write(arSendBuff2[i]);
-            while (!EUSART2_is_tx_done()) NOP();
-        }
+        while (!EUSART2_is_tx_ready()) NOP();
+        EUSART2_Write(arSendBuff2[i]);
+        while (!EUSART2_is_tx_done()) NOP();
     }
 }
 
@@ -115,9 +139,9 @@ void WorkWithBlock1(void)
             ReadMyFlash();
             SendMessage1(ANS_ID, sId, sizeof (sId));
             break;
-            //            case CMD_TEST:
-            //            SendMessage1(ANS_OK, NULL, 0);
-            //            break;            
+        case CMDRAS_GET_STATUS:
+            SendCurrArStatus1();
+            break;
         default:
             break;
     }
@@ -125,6 +149,7 @@ void WorkWithBlock1(void)
 
 void WorkWithBlock2(void)
 { //ответы с терминала
+    //uint8_t i = 0;
     switch (arRecivBuff2[0])
     {
         case ANS_OK:
@@ -134,7 +159,89 @@ void WorkWithBlock2(void)
             //SendMessage2(ANS_OK, NULL, 0);
             break;
         case ANS_STATUS:
-            //SendMessage2(ANS_OK, NULL, 0);
+            memcpy(arStat + (iCurrTerm * sizeof (AnsStatus)), arRecivBuff1 + 1, sizeof (AnsStatus));
+            break;
+        default:
+            break;
+    }
+}
+
+//Переключаем USART2 на разные лапки Пика.
+
+void ToggleUsart2Pins(uint8_t num)
+{
+    //не используемые выходы как обычные порты, иначе будет дублирование
+    RC1PPS = 0x00;
+    RC3PPS = 0x00;
+    RC5PPS = 0x00;
+    RB1PPS = 0x00;
+    RB3PPS = 0x00;
+    //все не используемые выходы на "вход"
+    TRISCbits.TRISC1 = 1;
+    TRISCbits.TRISC3 = 1;
+    TRISCbits.TRISC5 = 1;
+    TRISBbits.TRISB1 = 1;
+    TRISBbits.TRISB3 = 1;
+
+    switch (num)
+    {
+        case 0:
+            TRISCbits.TRISC0 = 1;
+            RX2DTPPS = 0x10; //in EUSART2:RX2
+            TRISCbits.TRISC1 = 0;
+            RC1PPS = 0x11; //out EUSART2:TX2
+            break;
+        case 1:
+            TRISCbits.TRISC2 = 1;
+            RX2DTPPS = 0x12; //in EUSART2:RX2
+            TRISCbits.TRISC3 = 0;
+            RC3PPS = 0x11; //out EUSART2:TX2
+            break;
+        case 2:
+            TRISCbits.TRISC4 = 1;
+            RX2DTPPS = 0x14; //in EUSART2:RX2
+            TRISCbits.TRISC5 = 0;
+            RC5PPS = 0x11; //out EUSART2:TX2
+            break;
+        case 3:
+            TRISBbits.TRISB0 = 1;
+            RX2DTPPS = 0x08; //in EUSART2:RX2
+            TRISBbits.TRISB1 = 0;
+            RB1PPS = 0x11; //out EUSART2:TX2
+            break;
+        case 4:
+            TRISBbits.TRISB2 = 1;
+            RX2DTPPS = 0x0A; //in EUSART2:RX2
+            TRISBbits.TRISB3 = 0;
+            RB3PPS = 0x11; //out EUSART2:TX2
+            break;
+        default:
+            break;
+    }
+
+    EUSART2_Initialize();
+}
+
+//включает и выключает питание на заданный слот
+
+void PowerOnTerm(uint8_t num, bool bPower)
+{
+    switch (num)
+    {
+        case 0:
+            LATAbits.LATA0 = bPower;
+            break;
+        case 1:
+            LATAbits.LATA1 = bPower;
+            break;
+        case 2:
+            LATAbits.LATA2 = bPower;
+            break;
+        case 3:
+            LATAbits.LATA3 = bPower;
+            break;
+        case 4:
+            LATAbits.LATA4 = bPower;
             break;
         default:
             break;
@@ -149,26 +256,50 @@ void main(void)
 
     My_Initialise();
 
-    INTERRUPT_GlobalInterruptEnable();
-    INTERRUPT_PeripheralInterruptEnable();
-    //INTERRUPT_GlobalInterruptDisable();
-    //INTERRUPT_PeripheralInterruptDisable();
-
     while (1)
     {
-        if (IntrChanged.bIntrUsart1)
+        for (iCurrTerm = 0; iCurrTerm < 5; iCurrTerm++)
         {
-            WorkWithBlock1();
-            IntrChanged.bIntrUsart1 = false;
-        }
+            INTERRUPT_GlobalInterruptDisable();
+            INTERRUPT_PeripheralInterruptDisable();
+            PPSLOCK = 0x55;
+            PPSLOCK = 0xAA;
+            PPSLOCK = 0x00; // unlock PPS            
+            ToggleUsart2Pins(iCurrTerm);
+            PPSLOCK = 0x55;
+            PPSLOCK = 0xAA;
+            PPSLOCK = 0x01; // lock   PPS
+            INTERRUPT_GlobalInterruptEnable();
+            INTERRUPT_PeripheralInterruptEnable();
+            
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_GET_STATUS, NULL, 0);            
+            TMR0_WriteTimer(0xFC17); //timeout ~1 sec.
+            TMR0_StartTimer();
+            memset(arStat + (iCurrTerm * sizeof (AnsStatus)), 0, sizeof (AnsStatus));
+            while (!PIR0bits.TMR0IF /*|| IntrChanged.bIntrUsart2 */) NOP();
+            TMR0_StopTimer();
+            PIR0bits.TMR0IF = 0;
+            if (IntrChanged.bIntrUsart2)
+            {
+                WorkWithBlock2();
+                IntrChanged.bIntrUsart2 = false;
+                PowerOnTerm(iCurrTerm, true);
+            }
+            else
+            {
+                PowerOnTerm(iCurrTerm, false);
+            }
 
-        if (IntrChanged.bIntrUsart2)
-        {
-            WorkWithBlock2();
-            IntrChanged.bIntrUsart2 = false;
+            if (IntrChanged.bIntrUsart1)
+            {
+                WorkWithBlock1();
+                IntrChanged.bIntrUsart1 = false;
+            }
         }
     }
 }
+
 /**
  End of File
  */

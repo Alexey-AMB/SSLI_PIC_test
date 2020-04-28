@@ -25,7 +25,6 @@ typedef enum {
 } ScMode;
 
 typedef struct {
-    bool bIntrPin;
     bool bIntrUsart1;
     bool bIntrUsart2;
 } stInterrupt;
