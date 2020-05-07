@@ -170,6 +170,12 @@ void WorkWithBlock2(void)
 
 void ToggleUsart2Pins(uint8_t num)
 {
+    INTERRUPT_GlobalInterruptDisable();
+    INTERRUPT_PeripheralInterruptDisable();
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCK = 0x00; // unlock PPS    
+
     //не используемые выходы как обычные порты, иначе будет дублирование
     RC1PPS = 0x00;
     RC3PPS = 0x00;
@@ -219,6 +225,12 @@ void ToggleUsart2Pins(uint8_t num)
             break;
     }
 
+    PPSLOCK = 0x55;
+    PPSLOCK = 0xAA;
+    PPSLOCK = 0x01; // lock   PPS
+    INTERRUPT_GlobalInterruptEnable();
+    INTERRUPT_PeripheralInterruptEnable();
+
     EUSART2_Initialize();
 }
 
@@ -260,20 +272,10 @@ void main(void)
     {
         for (iCurrTerm = 0; iCurrTerm < 5; iCurrTerm++)
         {
-            INTERRUPT_GlobalInterruptDisable();
-            INTERRUPT_PeripheralInterruptDisable();
-            PPSLOCK = 0x55;
-            PPSLOCK = 0xAA;
-            PPSLOCK = 0x00; // unlock PPS            
             ToggleUsart2Pins(iCurrTerm);
-            PPSLOCK = 0x55;
-            PPSLOCK = 0xAA;
-            PPSLOCK = 0x01; // lock   PPS
-            INTERRUPT_GlobalInterruptEnable();
-            INTERRUPT_PeripheralInterruptEnable();
             
             __delay_ms(10);
-            SendMessage2((UsartAnswer) CMD_GET_STATUS, NULL, 0);            
+            SendMessage2((UsartAnswer) CMD_GET_STATUS, NULL, 0);
             TMR0_WriteTimer(0xFC17); //timeout ~1 sec.
             TMR0_StartTimer();
             memset(arStat + (iCurrTerm * sizeof (AnsStatus)), 0, sizeof (AnsStatus));
