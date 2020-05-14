@@ -49,6 +49,9 @@ void My_Initialise()
     IntrChanged.bIntrUsart2 = false;
 
     ReadMyFlash();
+
+    TMR0_StopTimer();
+    PIR0bits.TMR0IF = 0;
 }
 
 void SendMessage1(UsartAnswer ans, void* data, uint8_t lendata)
@@ -60,7 +63,7 @@ void SendMessage1(UsartAnswer ans, void* data, uint8_t lendata)
     arSendBuff1[0] = 0x0A;
     arSendBuff1[1] = lenmess;
     arSendBuff1[2] = ans;
-    memcpy(arSendBuff1, data, lendata);
+    memcpy(arSendBuff1 + 3, data, lendata);
     arSendBuff1[lendata + 3] = GetCRC8(arSendBuff1 + 2, lendata + 1);
 
     for (i = 0; i < lenmess; i++)
@@ -105,7 +108,7 @@ void SendMessage2(UsartAnswer ans, void* data, uint8_t lendata)
     arSendBuff2[0] = 0x0A;
     arSendBuff2[1] = lenmess;
     arSendBuff2[2] = ans;
-    memcpy(arSendBuff2, data, lendata);
+    memcpy(arSendBuff2 + 3, data, lendata);
     arSendBuff2[lendata + 3] = GetCRC8(arSendBuff2 + 2, lendata + 1);
 
     for (i = 0; i < lenmess; i++)
@@ -113,56 +116,6 @@ void SendMessage2(UsartAnswer ans, void* data, uint8_t lendata)
         while (!EUSART2_is_tx_ready()) NOP();
         EUSART2_Write(arSendBuff2[i]);
         while (!EUSART2_is_tx_done()) NOP();
-    }
-}
-
-void WorkWithBlock1(void)
-{ //команды с малины
-    switch (arRecivBuff1[0])
-    {
-        case CMD_TEST:
-            SendMessage1(ANS_OK, NULL, 0);
-            break;
-        case CMD_SET_SERNUM:
-            memcpy(&iSerNum, arRecivBuff1 + 1, sizeof (uint16_t));
-            WriteMyFlash();
-            break;
-        case CMD_SET_ID:
-            memcpy(sId, arRecivBuff1 + 1, sizeof (sId));
-            WriteMyFlash();
-            break;
-        case CMD_GET_SERNUM:
-            ReadMyFlash();
-            SendMessage1(ANS_SERNUM, &iSerNum, sizeof (uint16_t));
-            break;
-        case CMD_GET_ID:
-            ReadMyFlash();
-            SendMessage1(ANS_ID, sId, sizeof (sId));
-            break;
-        case CMDRAS_GET_STATUS:
-            SendCurrArStatus1();
-            break;
-        default:
-            break;
-    }
-}
-
-void WorkWithBlock2(void)
-{ //ответы с терминала
-    //uint8_t i = 0;
-    switch (arRecivBuff2[0])
-    {
-        case ANS_OK:
-            //SendMessage2(ANS_OK, NULL, 0);
-            break;
-        case ANS_ERROR:
-            //SendMessage2(ANS_OK, NULL, 0);
-            break;
-        case ANS_STATUS:
-            memcpy(arStat + (iCurrTerm * sizeof (AnsStatus)), arRecivBuff1 + 1, sizeof (AnsStatus));
-            break;
-        default:
-            break;
     }
 }
 
@@ -234,6 +187,61 @@ void ToggleUsart2Pins(uint8_t num)
     EUSART2_Initialize();
 }
 
+void WorkWithBlock1(void)
+{ //команды с малины
+    switch (arRecivBuff1[0])
+    {
+        case CMD_TEST:
+            SendMessage1(ANS_OK, NULL, 0);
+            break;
+        case CMD_SET_SERNUM:
+            memcpy(&iSerNum, arRecivBuff1 + 1, sizeof (uint16_t));
+            WriteMyFlash();
+            break;
+        case CMD_SET_ID:
+            memcpy(sId, arRecivBuff1 + 1, sizeof (sId));
+            WriteMyFlash();
+            break;
+        case CMD_GET_SERNUM:
+            ReadMyFlash();
+            SendMessage1(ANS_SERNUM, &iSerNum, sizeof (uint16_t));
+            break;
+        case CMD_GET_ID:
+            ReadMyFlash();
+            SendMessage1(ANS_ID, sId, sizeof (sId));
+            break;
+        case CMDRAS_GET_STATUS:
+            SendCurrArStatus1();
+            break;
+        case CMDRAS_SET_IP:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_SET_IP, arRecivBuff1 + 2, 2);
+            break;
+        default:
+            break;
+    }
+}
+
+void WorkWithBlock2(void)
+{ //ответы с терминала
+    //uint8_t i = 0;
+    switch (arRecivBuff2[0])
+    {
+        case ANS_OK:
+            //SendMessage2(ANS_OK, NULL, 0);
+            break;
+        case ANS_ERROR:
+            //SendMessage2(ANS_OK, NULL, 0);
+            break;
+        case ANS_STATUS:
+            memcpy(arStat + (iCurrTerm * sizeof (AnsStatus)), arRecivBuff1 + 1, sizeof (AnsStatus));
+            break;
+        default:
+            break;
+    }
+}
+
 //включает и выключает питание на заданный слот
 
 void PowerOnTerm(uint8_t num, bool bPower)
@@ -273,7 +281,7 @@ void main(void)
         for (iCurrTerm = 0; iCurrTerm < 5; iCurrTerm++)
         {
             ToggleUsart2Pins(iCurrTerm);
-            
+
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_GET_STATUS, NULL, 0);
             TMR0_WriteTimer(0xFC17); //timeout ~1 sec.

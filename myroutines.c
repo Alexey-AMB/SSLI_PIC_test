@@ -89,7 +89,7 @@ void Usart1GetBlock(void)
             {
                 arRecivBuff1[iRecived1 - 2] = rbyte1;
             }
-            if (iRecived1 >= iExpectedLen1)
+            if (iRecived1 >= iExpectedLen1 - 1)//-1
             {
                 if (GetCRC8(arRecivBuff1, iRecived1) == rbyte1)
                 {
@@ -137,7 +137,7 @@ void Usart2GetBlock(void)
             {
                 arRecivBuff2[iRecived2 - 2] = rbyte2;
             }
-            if (iRecived2 >= iExpectedLen2)
+            if (iRecived2 >= iExpectedLen2 - 1)//-1
             {
                 if (GetCRC8(arRecivBuff2, iRecived2) == rbyte2)
                 {
