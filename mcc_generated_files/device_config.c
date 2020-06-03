@@ -72,7 +72,7 @@
 // CONFIG4
 #pragma config BBSIZE = BB512    // Boot Block Size Selection bits->512 words boot block size
 #pragma config BBEN = OFF    // Boot Block Enable bit->Boot Block disabled
-#pragma config SAFEN = OFF    // SAF Enable bit->SAF disabled
+#pragma config SAFEN = ON    // SAF Enable bit->SAF disabled
 #pragma config WRTAPP = OFF    // Application Block Write Protection bit->Application Block not write protected
 #pragma config WRTB = OFF    // Boot Block Write Protection bit->Boot Block not write protected
 #pragma config WRTC = OFF    // Configuration Register Write Protection bit->Configuration Register not write protected

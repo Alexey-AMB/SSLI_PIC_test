@@ -62,6 +62,6 @@ typedef struct {
     uint8_t SC_mode; //0-down, 1-sleep, 2-work
     uint8_t UpdateState;
 	uint8_t ChargeState;	//0-none, 1-in progress, 2-done
-} AnsStatus;
+} AnsStatus;    //size = 25
 
 

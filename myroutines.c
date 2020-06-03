@@ -18,7 +18,7 @@
 #include "mcc_generated_files/mcc.h"
 #include "myroutines.h"
 
-uint16_t BaseHEAddr = 0x0fdf;
+uint16_t BaseHEAddr = 0x0F80;
 
 uint8_t iRecived1 = 0;
 uint8_t iExpectedLen1 = 0;
@@ -30,34 +30,23 @@ uint8_t rbyte2 = 0;
 
 void ReadMyFlash(void)
 {
-    // 0f80-0fff
-
-    char i = 0;
-
+    // BaseHEAddr = 0x0F80;
+    uint8_t i = 0;
     memset(sId, 0, sizeof (sId));
     iSerNum = 0;
-
     iSerNum = FLASH_ReadWord(BaseHEAddr);
-
     for (i = 0; i < 8; i++)
     {
-        sId[i] = FLASH_ReadWord(BaseHEAddr + 2 + (i * 2));
+        sId[i] = FLASH_ReadWord(BaseHEAddr + 1 + i);
     }
 }
 
 void WriteMyFlash(void)
-{
-    char i = 0;
-
-    uint16_t wrBlockData[WRITE_FLASH_BLOCKSIZE];
+{   
+    uint16_t wrBlockData[WRITE_FLASH_BLOCKSIZE]; //WRITE_FLASH_BLOCKSIZE=32
     memset(wrBlockData, 0, sizeof (wrBlockData));
-    memcpy(wrBlockData, &iSerNum, 2);
-
-    for (i = 0; i < 16; i++)
-    {
-        memcpy(wrBlockData + 2 + i, sId, 1);
-    }
-
+    memcpy(wrBlockData, &iSerNum, sizeof(iSerNum));
+    memcpy(wrBlockData + 1, sId, sizeof(sId));    
     FLASH_WriteBlock(BaseHEAddr, wrBlockData);
 }
 

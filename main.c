@@ -32,7 +32,7 @@ uint16_t sId[8];
 uint16_t iSerNum;
 uint8_t iCurrTerm;
 uint8_t arRecivBuff1[20]; // __at(0x100); // >= 16 + 4
-uint8_t arRecivBuff2[20]; // __at(0x120);
+uint8_t arRecivBuff2[30]; // __at(0x120); // >= 25 + 4
 uint8_t arSendBuff1[30]; //>=AnsStatus + 4
 uint8_t arSendBuff2[30];
 AnsStatus arStat[5];
@@ -68,7 +68,7 @@ void SendMessage1(UsartAnswer ans, void* data, uint8_t lendata)
 
     for (i = 0; i < lenmess; i++)
     {
-        while (!EUSART2_is_tx_ready()) NOP();
+        while (!EUSART1_is_tx_ready()) NOP();
         EUSART1_Write(arSendBuff1[i]);
         while (!EUSART1_is_tx_done()) NOP();
     }
@@ -79,22 +79,22 @@ void SendCurrArStatus1(void)
     uint8_t i = 0;
     uint8_t crc = 0;
     crc = GetCRC8((uint8_t *) arStat, sizeof (arStat)) + ANS_ARSTAT;
-    while (!EUSART2_is_tx_ready()) NOP();
+    while (!EUSART1_is_tx_ready()) NOP();
     EUSART1_Write(0x0A);
     while (!EUSART1_is_tx_done()) NOP();
-    while (!EUSART2_is_tx_ready()) NOP();
+    while (!EUSART1_is_tx_ready()) NOP();
     EUSART1_Write(sizeof (arStat) + 4);
     while (!EUSART1_is_tx_done()) NOP();
-    while (!EUSART2_is_tx_ready()) NOP();
+    while (!EUSART1_is_tx_ready()) NOP();
     EUSART1_Write(ANS_ARSTAT);
     while (!EUSART1_is_tx_done()) NOP();
     for (i = 0; i < sizeof (arStat); i++)
     {
-        while (!EUSART2_is_tx_ready()) NOP();
+        while (!EUSART1_is_tx_ready()) NOP();
         EUSART1_Write(*((uint8_t *) arStat + i));
         while (!EUSART1_is_tx_done()) NOP();
     }
-    while (!EUSART2_is_tx_ready()) NOP();
+    while (!EUSART1_is_tx_ready()) NOP();
     EUSART1_Write(crc);
     while (!EUSART1_is_tx_done()) NOP();
 }
@@ -211,6 +211,18 @@ void WorkWithBlock1(void)
             SendMessage1(ANS_ID, sId, sizeof (sId));
             break;
         case CMDRAS_GET_STATUS:
+            
+            //test_only
+//            arStat[0].SerNum = 123;
+//            arStat[0].fAkkV = 3.4;
+//                        
+//            arStat[1].SerNum = 456;
+//            arStat[1].fAkkV = 4.0;
+//            arStat[1].sID[0] = 1;
+//            arStat[1].sID[1] = 2;
+//            arStat[1].sID[2] = 3;
+            //test_only
+            
             SendCurrArStatus1();
             break;
         case CMDRAS_SET_IP:
@@ -235,7 +247,7 @@ void WorkWithBlock2(void)
             //SendMessage2(ANS_OK, NULL, 0);
             break;
         case ANS_STATUS:
-            memcpy(arStat + (iCurrTerm * sizeof (AnsStatus)), arRecivBuff1 + 1, sizeof (AnsStatus));
+            memcpy(arStat + (iCurrTerm * sizeof (AnsStatus)), arRecivBuff2 + 1, sizeof (AnsStatus));
             break;
         default:
             break;
@@ -280,6 +292,9 @@ void main(void)
     {
         for (iCurrTerm = 0; iCurrTerm < 5; iCurrTerm++)
         {
+            IO_RB4_Toggle();    //test only
+            iCurrTerm = 0;      //test only
+            
             ToggleUsart2Pins(iCurrTerm);
 
             __delay_ms(10);

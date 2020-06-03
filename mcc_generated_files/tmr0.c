@@ -66,14 +66,14 @@ void TMR0_Initialize(void)
 {
     // Set TMR0 to the options selected in the User Interface
 
-    // T0CS FOSC/4; T0CKPS 1:128; T0ASYNC synchronised; 
-    T0CON1 = 0x47;
+    // T0CS FOSC/4; T0CKPS 1:512; T0ASYNC synchronised; 
+    T0CON1 = 0x49;
 
-    // TMR0H 0; 
-    TMR0H = 0x00;
+    // TMR0H 255; 
+    TMR0H = 0xFF;
 
-    // TMR0L 0; 
-    TMR0L = 0x00;
+    // TMR0L 251; 
+    TMR0L = 0xFB;
 
     // Load TMR0 value to the 16-bit reload variable
     timer0ReloadVal16bit = (TMR0H << 8) | TMR0L;
@@ -81,8 +81,8 @@ void TMR0_Initialize(void)
     // Clearing IF flag
     PIR0bits.TMR0IF = 0;
 
-    // T0OUTPS 1:8; T0EN disabled; T016BIT 16-bit; 
-    T0CON0 = 0x17;
+    // T0OUTPS 1:1; T0EN disabled; T016BIT 16-bit; 
+    T0CON0 = 0x10;
 }
 
 void TMR0_StartTimer(void)

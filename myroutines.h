@@ -33,7 +33,7 @@ extern uint16_t iSerNum;
 extern uint16_t sId[8]; //char[16]
 
 extern uint8_t arRecivBuff1[20];
-extern uint8_t arRecivBuff2[20];
+extern uint8_t arRecivBuff2[30];
 extern stInterrupt IntrChanged;
 
 void ReadMyFlash(void);
