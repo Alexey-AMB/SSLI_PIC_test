@@ -58,7 +58,7 @@ typedef enum {
 typedef struct {
     uint16_t SerNum;
     uint16_t sID[8];
-    float fAkkV;
+    uint32_t uAkkmV;    //uint32 in mV
     uint8_t SC_mode; //0-down, 1-sleep, 2-work
     uint8_t UpdateState;
 	uint8_t ChargeState;	//0-none, 1-in progress, 2-done

@@ -240,6 +240,9 @@ void WorkWithBlock2(void)
     //uint8_t i = 0;
     switch (arRecivBuff2[0])
     {
+        case CMD_TEST:  //test only
+            SendMessage2(ANS_OK, NULL, 0);
+            break;
         case ANS_OK:
             //SendMessage2(ANS_OK, NULL, 0);
             break;
