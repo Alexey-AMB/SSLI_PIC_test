@@ -296,7 +296,7 @@ void main(void)
         for (iCurrTerm = 0; iCurrTerm < 5; iCurrTerm++)
         {
             IO_RB4_Toggle();    //test only
-            iCurrTerm = 0;      //test only
+            //iCurrTerm = 0;      //test only
             
             ToggleUsart2Pins(iCurrTerm);
 
