@@ -230,6 +230,11 @@ void WorkWithBlock1(void)
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_SET_IP, arRecivBuff1 + 2, 2);
             break;
+        case CMD_SET_UPDATES:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_SET_UPDATES, arRecivBuff1 + 2, 1);
+            break;
         default:
             break;
     }
@@ -251,6 +256,9 @@ void WorkWithBlock2(void)
             break;
         case ANS_STATUS:
             memcpy(arStat + (iCurrTerm * sizeof (AnsStatus)), arRecivBuff2 + 1, sizeof (AnsStatus));
+            break;
+        case ANS_UPDATES:
+            SendMessage1(ANS_UPDATES, arRecivBuff2 + 1, 1);
             break;
         default:
             break;
