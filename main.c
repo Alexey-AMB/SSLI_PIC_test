@@ -235,6 +235,16 @@ void WorkWithBlock1(void)
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_SET_UPDATES, arRecivBuff1 + 2, 1);
             break;
+        case CMD_USB_OE_EN:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_USB_OE_EN, NULL, 0);
+            break;
+        case CMD_USB_OE_DIS:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_USB_OE_DIS, NULL, 0);
+            break;
         default:
             break;
     }
