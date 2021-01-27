@@ -87,6 +87,7 @@ void Usart1GetBlock(void)
                 }
                 else
                 {
+                    iRecived1 = 0; //for breakpoint on debug
                     //error crc - sendErr()
                 }
                 iRecived1 = 0;

@@ -211,18 +211,16 @@ void WorkWithBlock1(void)
             SendMessage1(ANS_ID, sId, sizeof (sId));
             break;
         case CMDRAS_GET_STATUS:
-            
             //test_only
-//            arStat[0].SerNum = 123;
-//            arStat[0].fAkkV = 3.4;
-//                        
-//            arStat[1].SerNum = 456;
-//            arStat[1].fAkkV = 4.0;
-//            arStat[1].sID[0] = 1;
-//            arStat[1].sID[1] = 2;
-//            arStat[1].sID[2] = 3;
-            //test_only
-            
+            //            arStat[0].SerNum = 123;
+            //            arStat[0].uAkkmV = 3400;
+            //                        
+            //            arStat[1].SerNum = 456;
+            //            arStat[1].uAkkmV = 4000;
+            //            arStat[1].sID[0] = 1;
+            //            arStat[1].sID[1] = 2;
+            //            arStat[1].sID[2] = 3;
+            //test_only            
             SendCurrArStatus1();
             break;
         case CMDRAS_SET_IP:
@@ -230,20 +228,80 @@ void WorkWithBlock1(void)
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_SET_IP, arRecivBuff1 + 2, 2);
             break;
-        case CMD_SET_UPDATES:
+        case CMDRAS_SET_UPDATES:
             ToggleUsart2Pins(arRecivBuff1[1]);
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_SET_UPDATES, arRecivBuff1 + 2, 1);
             break;
-        case CMD_USB_OE_EN:
+        case CMDRAS_CHRG_EN:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_CHRG_EN, NULL, 0);
+            break;
+        case CMDRAS_CHRG_DIS:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_CHRG_DIS, NULL, 0);
+            break;
+        case CMDRAS_USBA_EN:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_USBA_EN, NULL, 0);
+            break;
+        case CMDRAS_USBA_DIS:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_USBA_DIS, NULL, 0);
+            break;
+        case CMDRAS_LED_R_ON:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_LED_R_ON, NULL, 0);
+            break;
+        case CMDRAS_LED_R_OFF:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_LED_R_OFF, NULL, 0);
+            break;
+        case CMDRAS_LED_G_ON:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_LED_G_ON, NULL, 0);
+            break;
+        case CMDRAS_LED_G_OFF:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_LED_G_OFF, NULL, 0);
+            break;
+        case CMDRAS_USBOE_EN:
             ToggleUsart2Pins(arRecivBuff1[1]);
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_USB_OE_EN, NULL, 0);
             break;
-        case CMD_USB_OE_DIS:
+        case CMDRAS_USBOE_DIS:
             ToggleUsart2Pins(arRecivBuff1[1]);
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_USB_OE_DIS, NULL, 0);
+            break;
+        case CMDRAS_SC_SLEEP:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_SC_SLEEP, NULL, 0);
+            break;
+        case CMDRAS_SC_RUN:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_SC_RUN, NULL, 0);
+            break;
+        case CMDRAS_SC_DOWN:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_SC_DOWN, NULL, 0);
+            break;
+        case CMDRAS_SC_REBOOT:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2((UsartAnswer) CMD_SC_REBOOT, NULL, 0);
             break;
         default:
             break;
@@ -255,7 +313,7 @@ void WorkWithBlock2(void)
     //uint8_t i = 0;
     switch (arRecivBuff2[0])
     {
-        case CMD_TEST:  //test only
+        case CMD_TEST: //test only
             SendMessage2(ANS_OK, NULL, 0);
             break;
         case ANS_OK:
@@ -264,10 +322,10 @@ void WorkWithBlock2(void)
         case ANS_ERROR:
             //SendMessage2(ANS_OK, NULL, 0);
             break;
-        case ANS_STATUS:
-            memcpy(arStat + (iCurrTerm * sizeof (AnsStatus)), arRecivBuff2 + 1, sizeof (AnsStatus));
+        case ANS_STATUS: //arStat + (iCurrTerm * sizeof (AnsStatus))
+            memcpy((void *) arStat + (sizeof (AnsStatus) * iCurrTerm), arRecivBuff2 + 1, sizeof (AnsStatus));
             break;
-        case ANS_UPDATES:
+        case ANS_UPDATES: //нахуа???
             SendMessage1(ANS_UPDATES, arRecivBuff2 + 1, 1);
             break;
         default:
@@ -313,28 +371,27 @@ void main(void)
     {
         for (iCurrTerm = 0; iCurrTerm < 5; iCurrTerm++)
         {
-            IO_RB4_Toggle();    //test only
-            //iCurrTerm = 0;      //test only
-            
-            ToggleUsart2Pins(iCurrTerm);
+            IO_RB4_Toggle();    //Red LED
 
+            PowerOnTerm(iCurrTerm, true);   //терминал может быть разряжен в хлам.
+            ToggleUsart2Pins(iCurrTerm);
             __delay_ms(10);
             SendMessage2((UsartAnswer) CMD_GET_STATUS, NULL, 0);
             TMR0_WriteTimer(0xFC17); //timeout ~1 sec.
             TMR0_StartTimer();
-            memset(arStat + (iCurrTerm * sizeof (AnsStatus)), 0, sizeof (AnsStatus));
+            memset((void *) arStat + (sizeof (AnsStatus) * iCurrTerm), 0, sizeof (AnsStatus));
             while (!PIR0bits.TMR0IF /*|| IntrChanged.bIntrUsart2 */) NOP();
             TMR0_StopTimer();
             PIR0bits.TMR0IF = 0;
-            if (IntrChanged.bIntrUsart2)
+            if (!IntrChanged.bIntrUsart2)
             {
-                WorkWithBlock2();
-                IntrChanged.bIntrUsart2 = false;
-                PowerOnTerm(iCurrTerm, true);
+                PowerOnTerm(iCurrTerm, false);
             }
             else
             {
-                PowerOnTerm(iCurrTerm, false);
+                WorkWithBlock2();
+                IntrChanged.bIntrUsart2 = false;
+                //PowerOnTerm(iCurrTerm, true); test only!!!
             }
 
             if (IntrChanged.bIntrUsart1)
