@@ -159,11 +159,6 @@ uint8_t GetCRC8(uint8_t *buf, uint8_t lenbuf)
 
 
 
-
-
-
-
-
 /**
  End of File
  */
