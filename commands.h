@@ -2,7 +2,7 @@
  * File:   
  * Author: Alexey
  * Comments:
- * Revision history: 
+ * Revision history: 1.1
  */
 
 //Format message from USART:
@@ -43,11 +43,11 @@ typedef enum {          //длинна данных, описание
     CMD_SET_IP,         //2, передача последнего байта IP адресов станции и терминала
     CMD_SET_UPD_STATUS, //1, обновления баз 0-не обновлен, 1-готов к приему, 2-идет обновление, 3-завершено  
             
-    // комнды далее - со станции на терминал. 1-й параметр номер слота        
+    // комнды далее - со станции на терминал. 1-й параметр номер слота (нумерация слотов с нуля, нулевой ближе к экрану)       
     CMDRAS_GET_STATUS = 30,  //1, запрос текущего статуса терминала
     CMDRAS_SET_IP,      //3, передача последнего байта IP адресов станции и терминала на указанный слот (слот, станция, терм) - только по USART1
     CMDRAS_SET_UPDSTRT, //1, включить прием по RNDIS
-          
+    //       
     CMDRAS_CHRG_EN,     //1, - параметр номер слота
     CMDRAS_CHRG_DIS,    //1, - параметр номер слота
     CMDRAS_USBA_EN,     //1, - параметр номер слота
@@ -61,7 +61,11 @@ typedef enum {          //длинна данных, описание
     CMDRAS_SC_SLEEP,    //1, - параметр номер слота
     CMDRAS_SC_RUN,      //1, - параметр номер слота
     CMDRAS_SC_DOWN,     //1, - параметр номер слота
-    CMDRAS_SC_REBOOT    //1, - параметр номер слота
+    CMDRAS_SC_REBOOT,   //1, - параметр номер слота
+    // управление питанием
+    CMDRAS_SLOT_PWRON,  //1, включить питание на слот
+    CMDRAS_SLOT_PWROFF, //1, выключить питание на слот
+    CMDRAS_RASP_REBOOT  //0, выключить питание малинки, подождать секунду, включить питание малинки
 } UsartCommand;
 
 typedef enum {
@@ -71,8 +75,8 @@ typedef enum {
     ANS_SERNUM,     //2
     ANS_ID,         //16
     ANS_AKKVOLT,    //4
-    ANS_STATUS,     //26 = AnsStatus
-    ANS_ARSTAT,     //5*AnsStatus - не используется
+    ANS_STATUS      //26 = AnsStatus
+    //ANS_ARSTAT,   //5*AnsStatus - не используется
 } UsartAnswer;
 
 typedef struct {
