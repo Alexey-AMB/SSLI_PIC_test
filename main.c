@@ -249,6 +249,7 @@ void WorkWithBlock1(void)
             __delay_ms(10);
             SendMessage2(CMDRAS_SET_UPDSTRT, NULL, 0);
             break;
+            
         case CMDRAS_CHRG_EN:
             ToggleUsart2Pins(arRecivBuff1[1]);
             __delay_ms(10);
@@ -319,6 +320,22 @@ void WorkWithBlock1(void)
             __delay_ms(10);
             SendMessage2(CMD_SC_REBOOT, NULL, 0);
             break;
+        case CMDRAS_GET_AKKPRCNT:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2(CMD_GET_AKKPRCNT, NULL, 0);
+            break;
+        case CMDRAS_SET_ID:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2(CMD_SET_ID, arRecivBuff1 + 2, 16);
+            break;    
+        case CMDRAS_SET_SERNUM:
+            ToggleUsart2Pins(arRecivBuff1[1]);
+            __delay_ms(10);
+            SendMessage2(CMD_SET_SERNUM, arRecivBuff1 + 2, 2);
+            break;     
+            
         case CMDRAS_SLOT_PWRON:
             PowerOnTerm(arRecivBuff1[1], true);
             break;

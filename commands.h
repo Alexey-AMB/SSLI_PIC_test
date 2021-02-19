@@ -36,7 +36,7 @@ typedef enum {          //длинна данных, описание
     CMD_GET_SERNUM,     //0, запрос сер. номера, ответ типа "ANS_SERNUM"
     CMD_GET_ID,         //0, запрос уникального номера, ответ типа "ANS_ID"
     CMD_GET_AKKPRCNT,   //1, запросить процент аккумулятора у модуля        
-    CMD_SET_AKKPRCNT,   //1, установить процент аккумулятора в статусе (ответ с модуля на пик)
+    CMD_SET_AKKPRCNT,   //1, установить процент аккумулятора в статусе (ответ с модуля на пик) >100 - зарядка завершена
     CMD_GET_STATUS,     //0, запрос текущего статуса, ответ типа "ANS_STATUS"
     CMD_SET_SERNUM,     //2, передача серийного номера, для проверки считать
     CMD_SET_ID,         //16, передача уникального ID,  для проверки считать
@@ -62,6 +62,9 @@ typedef enum {          //длинна данных, описание
     CMDRAS_SC_RUN,      //1, - параметр номер слота
     CMDRAS_SC_DOWN,     //1, - параметр номер слота
     CMDRAS_SC_REBOOT,   //1, - параметр номер слота
+    CMDRAS_GET_AKKPRCNT,//1, - параметр номер слота
+    CMDRAS_SET_ID,      //17, - параметр номер слота, 16 - передача уникального ID для терминала
+    CMDRAS_SET_SERNUM,  //3, - параметр номер слота, 2 - передача серийного номера для терминала
     // управление питанием
     CMDRAS_SLOT_PWRON,  //1, включить питание на слот
     CMDRAS_SLOT_PWROFF, //1, выключить питание на слот
@@ -83,7 +86,7 @@ typedef struct {
     uint16_t SerNum;
     uint16_t sID[8];
     uint32_t uAkkmV;        //uint32 akk in mV
-	uint8_t uAkkPrcnt;		//akk in percent
+	uint8_t uAkkPrcnt;		//akk in percent (200 - not known)
     uint8_t SC_mode;        //0-down, 1-sleep, 2-work
     uint8_t UpdateState;    //0-not start, 1-ready recive, 2-working, 3-finished
 	uint8_t ChargeState;	//0-none, 1-in progress, 2-done
