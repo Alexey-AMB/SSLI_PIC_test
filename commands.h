@@ -35,8 +35,8 @@ typedef enum {          //длинна данных, описание
     CMD_LED_G_OFF,      //0, погасить зеленый    
     CMD_GET_SERNUM,     //0, запрос сер. номера, ответ типа "ANS_SERNUM"
     CMD_GET_ID,         //0, запрос уникального номера, ответ типа "ANS_ID"
-    CMD_GET_AKKPRCNT,   //1, запросить процент аккумулятора у модуля        
-    CMD_SET_AKKPRCNT,   //1, установить процент аккумулятора в статусе (ответ с модуля на пик) >100 - зарядка завершена
+    CMD_GET_AKKPRCNT,   //0, запросить процент аккумулятора у модуля        
+    CMD_SET_AKKPRCNT,   //1, установить процент аккумулятора в статусе (ответ с модуля на пик) (0-100 - real percent, 100-200 - percent in charge, 201 - full(charge is off), 220 - cold, 221 - hot, 222 - not known)
     CMD_GET_STATUS,     //0, запрос текущего статуса, ответ типа "ANS_STATUS"
     CMD_SET_SERNUM,     //2, передача серийного номера, для проверки считать
     CMD_SET_ID,         //16, передача уникального ID,  для проверки считать
@@ -44,7 +44,7 @@ typedef enum {          //длинна данных, описание
     CMD_SET_UPD_STATUS, //1, обновления баз 0-не обновлен, 1-готов к приему, 2-идет обновление, 3-завершено  
             
     // комнды далее - со станции на терминал. 1-й параметр номер слота (нумерация слотов с нуля, нулевой ближе к экрану)       
-    CMDRAS_GET_STATUS = 30,  //1, запрос текущего статуса терминала
+    CMDRAS_GET_STATUS = 30,  //1, запрос текущего статуса терминала - долго ~1.1 сек
     CMDRAS_SET_IP,      //3, передача последнего байта IP адресов станции и терминала на указанный слот (слот, станция, терм) - только по USART1
     CMDRAS_SET_UPDSTRT, //1, включить прием по RNDIS
     //       
@@ -86,7 +86,7 @@ typedef struct {
     uint16_t SerNum;
     uint16_t sID[8];
     uint32_t uAkkmV;        //uint32 akk in mV
-	uint8_t uAkkPrcnt;		//akk in percent (200 - not known)
+	uint8_t uAkkPrcnt;		//akk in percent (0-100 - real percent (charge is off), 100-200 - percent in charge, 201 - full(charge is off), 220 - cold, 221 - hot, 222 - not known)
     uint8_t SC_mode;        //0-down, 1-sleep, 2-work
     uint8_t UpdateState;    //0-not start, 1-ready recive, 2-working, 3-finished
 	uint8_t ChargeState;	//0-none, 1-in progress, 2-done

@@ -30,9 +30,9 @@ stInterrupt IntrChanged;
 
 uint16_t sId[8];
 uint16_t iSerNum;
-uint8_t iCurrTerm;
-uint8_t arRecivBuff1[20]; // __at(0x100); // >= 16 + 4
-uint8_t arRecivBuff2[32]; // __at(0x120); // >= 25 + 4
+
+uint8_t arRecivBuff1[32]; // __at(0x100); // >= 17 + 4
+uint8_t arRecivBuff2[32]; // __at(0x120); // >= AnsStatus + 4
 uint8_t arSendBuff1[32]; //>=AnsStatus + 4
 uint8_t arSendBuff2[32];
 AnsStatus anStat;
@@ -40,7 +40,6 @@ AnsStatus anStat;
 /** D E C L A R A T I O N S **************************************************/
 void My_Initialise()
 {
-    iCurrTerm = 0;
     memset(arRecivBuff1, 0, sizeof (arRecivBuff1));
     memset(arRecivBuff2, 0, sizeof (arRecivBuff2));
     memset(&anStat, 0, sizeof (anStat));
@@ -211,33 +210,75 @@ void PowerOnTerm(uint8_t num, bool bPower)
     }
 }
 
+void WorkWithBlock2(void)
+{ //ответы с терминала
+    //uint8_t i = 0;
+    switch (arRecivBuff2[0])
+    {
+        case CMD_TEST: //test only
+            SendMessage2((UsartCommand)ANS_OK, NULL, 0);
+            break;
+        case ANS_OK:
+            //SendMessage2(ANS_OK, NULL, 0);
+            break;
+        case ANS_ERROR:
+            //SendMessage2(ANS_ERROR, NULL, 0);
+            break;
+        case ANS_STATUS: //arStat + (iCurrTerm * sizeof (AnsStatus))
+            memcpy(&anStat, arRecivBuff2 + 1, sizeof (AnsStatus));
+            break;
+        default:
+            break;
+    }
+}
+
 void WorkWithBlock1(void)
 { //команды с малины
+    uint8_t iNumRepeat = 0;
     switch (arRecivBuff1[0])
     {
         case CMD_TEST:
             SendMessage1((UsartCommand)ANS_OK, NULL, 0);
             break;
-        case CMD_SET_SERNUM:
+        case CMD_SET_SERNUM:    //номер станции!
             memcpy(&iSerNum, arRecivBuff1 + 1, sizeof (uint16_t));
             WriteMyFlash();
             break;
-        case CMD_SET_ID:
+        case CMD_SET_ID:        //ИД станции!
             memcpy(sId, arRecivBuff1 + 1, sizeof (sId));
             WriteMyFlash();
             break;
-        case CMD_GET_SERNUM:
+        case CMD_GET_SERNUM:    //номер станции!
             ReadMyFlash();
             SendMessage1((UsartCommand)ANS_SERNUM, &iSerNum, sizeof (uint16_t));
             break;
-        case CMD_GET_ID:
+        case CMD_GET_ID:        //ИД станции!
             ReadMyFlash();
             SendMessage1((UsartCommand)ANS_ID, sId, sizeof (sId));
             break;
         case CMDRAS_GET_STATUS:
+            //должно быть подано питание на слот
             ToggleUsart2Pins(arRecivBuff1[1]);
-            __delay_ms(10);
-            SendMessage2(CMD_GET_STATUS, NULL, 0);
+            __delay_ms(550);                    //если терм разряжен, то пику надо включиться
+            IntrChanged.bIntrUsart2 = false;
+            memset(&anStat, 0, sizeof (AnsStatus));
+            iNumRepeat = 0;
+            while(iNumRepeat < 4)
+            {
+                iNumRepeat++;
+                SendMessage2(CMD_GET_STATUS, NULL, 0);
+                TMR0_WriteTimer(0xFF9B);            //timeout ~0.1 sec.
+                TMR0_StartTimer();            
+                while (!PIR0bits.TMR0IF || IntrChanged.bIntrUsart2 ) NOP();
+                TMR0_StopTimer();
+                PIR0bits.TMR0IF = 0;
+                if(IntrChanged.bIntrUsart2) 
+                {
+                    WorkWithBlock2();
+                    break;
+                }
+            }
+            SendMessage1((UsartCommand)ANS_STATUS, &anStat, sizeof(AnsStatus));       
             break;
         case CMDRAS_SET_IP:
             ToggleUsart2Pins(arRecivBuff1[1]);
@@ -351,28 +392,6 @@ void WorkWithBlock1(void)
             TMR0_StopTimer();
             PIR0bits.TMR0IF = 0;
             LATAbits.LATA5 = 1;
-            break;
-        default:
-            break;
-    }
-}
-
-void WorkWithBlock2(void)
-{ //ответы с терминала
-    //uint8_t i = 0;
-    switch (arRecivBuff2[0])
-    {
-        case CMD_TEST: //test only
-            SendMessage2((UsartCommand)ANS_OK, NULL, 0);
-            break;
-        case ANS_OK:
-            //SendMessage2(ANS_OK, NULL, 0);
-            break;
-        case ANS_ERROR:
-            //SendMessage2(ANS_ERROR, NULL, 0);
-            break;
-        case ANS_STATUS: //anStat + (iCurrTerm * sizeof (AnsStatus))
-            memcpy(&anStat, arRecivBuff2 + 1, sizeof (AnsStatus));
             break;
         default:
             break;
