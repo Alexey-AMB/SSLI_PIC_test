@@ -422,10 +422,11 @@ void main(void)
             IO_RB4_Toggle(); //Red LED - Test_only
         }
         
-        if (IntrChanged.bIntrUsart2)
+        while(IntrChanged.bIntrUsart2)
         {
             WorkWithBlock2(); //ответы с терминала
             IntrChanged.bIntrUsart2 = false;
+            Usart2GetBlock();
             //__delay_ms(10); //если идет передача
         }
         __delay_ms(1);
